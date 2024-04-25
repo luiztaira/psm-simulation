@@ -1,7 +1,6 @@
 const fs = require('fs');
 const csv = require('csv-parser');
 
-// Define the countIf function
 const countIf = (objectsArray, propertyName, condition) => {
     let count = 0;
     for (let i = 0; i < objectsArray.length; i++) {
@@ -13,8 +12,7 @@ const countIf = (objectsArray, propertyName, condition) => {
     return count;
 };
 
-// Define the function to replicate Excel's COUNTIF and COUNT functions for multiple columns
-const replicateExcelCountAndRatios = (objectsArray, columnNames, conditions) => {
+const excelCountAndRatios = (objectsArray, columnNames, conditions) => {
     const counts = [];
     const ratios = [];
 
@@ -36,9 +34,7 @@ const replicateExcelCountAndRatios = (objectsArray, columnNames, conditions) => 
 
     return { counts, ratios };
 };
-
-// Define the findXCoordinate function
-const findXCoordinate = (y1, y2, y3, y4, conditions, intersectionType) => {
+const xCoordinate = (y1, y2, y3, y4, conditions, intersectionType) => {
     if (intersectionType === '高くて安すぎる') {
         x1 = conditions[3];
         x2 = conditions[4];
@@ -58,7 +54,6 @@ const findXCoordinate = (y1, y2, y3, y4, conditions, intersectionType) => {
         return numerator / denominator;
 };
 
-// Read CSV data and process
 const results = [];
 fs.createReadStream('PSMrawdata.csv')
     .pipe(csv())
@@ -66,21 +61,20 @@ fs.createReadStream('PSMrawdata.csv')
         results.push(row);
     })
     .on('end', () => {
-        const columnNames = ['高い', '安い', '高すぎる', '安すぎる']; // Column names to count values from
-        const conditions = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600]; // Conditions for counting
+        const columnNames = ['高い', '安い', '高すぎる', '安すぎる'];
+        const conditions = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600];
 
-        const { ratios } = replicateExcelCountAndRatios(results, columnNames, conditions);
+        const { ratios } = excelCountAndRatios(results, columnNames, conditions);
 
         const highRatios = ratios[0];
         const lowRatios = ratios[1];
         const tooHighRatios = ratios[2];
         const tooLowRatios = ratios[3];
 
-        // Find intersection points
-        const xHighLow = Math.ceil(findXCoordinate(highRatios[4], highRatios[5], lowRatios[4], lowRatios[5], conditions, '高くて安い'));
-        const xHighTooLow = Math.ceil(findXCoordinate(highRatios[3], highRatios[4], tooLowRatios[3], tooLowRatios[4], conditions, '高くて安すぎる'));
-        const xTooHighLow = Math.ceil(findXCoordinate(tooHighRatios[4], tooHighRatios[5], lowRatios[4], lowRatios[5], conditions, '高すぎて安い'));
-        const xTooHighTooLow = Math.ceil(findXCoordinate(tooHighRatios[4], tooHighRatios[5], tooLowRatios[4], tooLowRatios[5], conditions, '高すぎて安すぎる'));
+        const xHighLow = Math.ceil(xCoordinate(highRatios[4], highRatios[5], lowRatios[4], lowRatios[5], conditions, '高くて安い'));
+        const xHighTooLow = Math.ceil(xCoordinate(highRatios[3], highRatios[4], tooLowRatios[3], tooLowRatios[4], conditions, '高くて安すぎる'));
+        const xTooHighLow = Math.ceil(xCoordinate(tooHighRatios[4], tooHighRatios[5], lowRatios[4], lowRatios[5], conditions, '高すぎて安い'));
+        const xTooHighTooLow = Math.ceil(xCoordinate(tooHighRatios[4], tooHighRatios[5], tooLowRatios[4], tooLowRatios[5], conditions, '高すぎて安すぎる'));
 
         console.log(`理想価格：${xHighLow}円`);
         console.log(`最低品質保証価格：${xHighTooLow}円`);
